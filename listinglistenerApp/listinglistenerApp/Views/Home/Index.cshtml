@@ -1,0 +1,99 @@
+﻿@{
+  ViewData["Title"] = "Home Page";
+}
+
+<div class="row" id="vueApp">
+
+  <div class="col-md-6">
+    <h2>Generate Request</h2>
+    <p>Enter shop ids delimited by comma</p>
+
+    <input id="shopIds" placeholder="Enter Shop Ids" style="width: 100%;" type="text"/>
+    <br/>
+
+    <button id="sendReq" onclick="vueApp.sendRequest()">Send</button>
+  </div>
+
+  <div class="col-md-6">
+    <h2>Results</h2>
+
+    <div v-for="result in results">
+
+      <div v-if="result.isShopIdValid">
+
+        <h5 style="font-weight:bold">Shop Id: {{ result.shop.shop_id }}  Shop Name: {{ result.shop.shop_name }}</h5>
+
+        <div v-if="(result.added.length + result.removed.length) > 0">
+          <div v-for="item in result.removed">
+            <p>+ removed listing {{ item.listing_id }} {{ item.title }}</p>
+          </div>
+          <div v-for="item in result.added">
+            <p>+ added listing {{ item.listing_id }} {{ item.title }}</p>
+          </div>
+        </div>
+        <div v-else>
+
+          <div>
+            <p>No changes since last sync</p>
+          </div>
+
+        </div>
+
+      </div>
+      <div v-else>
+        <h5 style="font-weight:bold">Shop Id: {{ result.shop.shop_id }} is invalid.</h5>
+      </div>
+      
+    </div>
+
+  </div>
+
+</div>
+
+@section Scripts{
+  
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  
+  <script>
+    
+    var apiURL = window.location.origin + "/api/v1/sync/shops/";
+
+    var vueApp = new Vue({
+      el: "#vueApp",
+      data: {
+        results: []
+      },
+      methods: {
+        sendRequest: function () {
+
+          var ids = document.getElementById("shopIds").value;
+          var idArr = ids.split(",");
+
+          var uploadURL = apiURL;
+          
+            $.ajax({
+                url: uploadURL,
+                data: JSON.stringify(idArr),
+                type: "POST",
+                contentType: 'application/json',
+                dataType: 'json',
+                success: function (d) {
+
+                    vueApp.results = d;
+
+                },
+                statusCode: {
+                    0: function (response) {
+                        alert("Inventory tracking service unreachable. Contact support or try again later.")
+                    }
+                }
+
+          });
+        }
+
+      }
+    });
+
+  </script>
+
+}
